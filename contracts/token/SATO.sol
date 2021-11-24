@@ -105,7 +105,7 @@ contract Divine is TWAPOracleUpdater {
 contract SATO is Divine {
   using SafeMath for uint256;
 
-  constructor() Divine("Satoshi", "SATO", 18) {}
+  constructor() Divine("Satoshi", "SATO", 9) {}
 
   function mint(address account_, uint256 amount_) external onlyVault {
     _mint(account_, amount_);

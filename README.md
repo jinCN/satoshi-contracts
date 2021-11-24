@@ -1,46 +1,17 @@
-# Advanced Sample Hardhat Project
+# Satoshi Dao Contracts
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+## Deployment
 
-Try running some of the following tasks:
+### Rinkeby
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
-```
-
-# Etherscan verification
-
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
-
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
-
-```shell
-hardhat run --network ropsten scripts/sample-script.ts
-```
-
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
-
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
-```
-
-# Performance optimizations
-
-For faster runs of your tests and scripts, consider skipping ts-node's type checking by setting the environment variable `TS_NODE_TRANSPILE_ONLY` to `1` in hardhat's environment. For more details see [the documentation](https://hardhat.org/guides/typescript.html#performance-optimizations).
++ SATO:  0x6981A2DaF2cc23BDCF08E83aB4E3c6Bc7be34Eed
++ DAI:  0x8Ae428C98E1F9d49E85d7676FA41906B209f2BB9
++ Treasury:  0x1610C2Be53062E9239eff8aF443b5423c2090bfe
++ BondCalculator:  0xb36E0E525abff7fDBcbcd1c1a1991a87C698410c
++ Distributor:  0x9DF9BdD4d8a5f7b9b69c032898e3e045b559a457
++ StakedSATO:  0x54c639443eCbc668E5573b3e4Df4B07e34cFC710
++ SatoshiStaking:  0x2f193FAE2D49f62F02Df6b7E8C5B635bb9C70C3B
++ StakingWarmpup:  0x08d1F5e93bBEaD2d47E7BE417BA6748D3Aaf62E1
++ StakingHelper:  0xF4013be990f750f730dbF3221597c8e37B300162
++ DAIBond:  0xC150d822DEAD8016BEf5853F3D2a00F18f69265a
