@@ -9,7 +9,7 @@ import "./interfaces/ISATOERC20.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/SafeERC20.sol";
 
-contract OlympusTreasury is Ownable {
+contract SatoshiTreasury is Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
