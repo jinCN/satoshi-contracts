@@ -35,7 +35,7 @@ contract StakedSATO is ERC20Permit, Ownable {
   uint256 public INDEX;
 
   uint256 private constant MAX_UINT256 = ~uint256(0);
-  uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 5000000 * 10**9;
+  uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 5000000 * 10**18;
 
   // TOTAL_GONS is a multiple of INITIAL_FRAGMENTS_SUPPLY so that _gonsPerFragment is an integer.
   // Use the highest value that fits in a uint256 for max granularity.
@@ -49,7 +49,7 @@ contract StakedSATO is ERC20Permit, Ownable {
 
   mapping(address => mapping(address => uint256)) private _allowedValue;
 
-  constructor() ERC20("Staked Satoshi", "xSATO", 9) ERC20Permit() {
+  constructor() ERC20("Staked Satoshi", "xSATO", 18) ERC20Permit() {
     initializer = msg.sender;
     _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
     _gonsPerFragment = TOTAL_GONS.div(_totalSupply);

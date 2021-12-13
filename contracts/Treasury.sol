@@ -87,18 +87,18 @@ contract SatoshiTreasury is Ownable {
 
   constructor(
     address _SATO,
-    address _DAI,
-    address _SATODAI,
+    address _BTC,
+    address _SATOBTC,
     uint256 _blocksNeededForQueue
   ) {
     require(_SATO != address(0));
     SATO = _SATO;
 
-    isReserveToken[_DAI] = true;
-    reserveTokens.push(_DAI);
+    isReserveToken[_BTC] = true;
+    reserveTokens.push(_BTC);
 
-    isLiquidityToken[_SATODAI] = true;
-    liquidityTokens.push(_SATODAI);
+    isLiquidityToken[_SATOBTC] = true;
+    liquidityTokens.push(_SATOBTC);
 
     blocksNeededForQueue = _blocksNeededForQueue;
   }
@@ -286,7 +286,7 @@ contract SatoshiTreasury is Ownable {
   function valueOf(address _token, uint256 _amount) public view returns (uint256 value_) {
     if (isReserveToken[_token]) {
       // convert amount to match SATO decimals
-      value_ = _amount.mul(10**IERC20(SATO).decimals()).div(10**IERC20(_token).decimals());
+      value_ = _amount.mul(10**(IERC20(SATO).decimals() + 4)).div(10**IERC20(_token).decimals());
     } else if (isLiquidityToken[_token]) {
       value_ = IBondCalculator(bondCalculator[_token]).valuation(_token, _amount);
     }

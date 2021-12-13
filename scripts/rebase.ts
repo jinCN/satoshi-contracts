@@ -9,7 +9,7 @@ async function delay(ms: number) {
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-  const staking = SatoshiStaking__factory.connect("0xbB7589945DfD5Fc6D0408104b60Ed1b9a36c5129", deployer);
+  const staking = SatoshiStaking__factory.connect("0x03673AFaCAD48E1c8190d1BCCbC8C998CC7c929C", deployer);
   while (true) {
     const block = await ethers.provider.getBlockNumber();
     try {

@@ -1,3 +1,4 @@
+/* eslint-disable node/no-missing-import */
 import { expect } from "chai";
 import { constants, Signer } from "ethers";
 import { ethers } from "hardhat";
@@ -67,6 +68,7 @@ describe("SatoshiStaking.spec", async () => {
     await treasury.toggle(8, distributor.address, constants.AddressZero);
     await treasury.queue(0, await deployer.getAddress());
     await treasury.toggle(0, await deployer.getAddress(), constants.AddressZero);
+    await xsato.setIndex(ethers.utils.parseUnits("1", 9));
 
     const amount = ethers.utils.parseEther("500000");
     const value = ethers.utils.parseUnits("500000", 9);
@@ -79,9 +81,22 @@ describe("SatoshiStaking.spec", async () => {
     const amount = ethers.utils.parseUnits("10000", 9);
     await sato.transfer(await alice.getAddress(), amount);
     await sato.connect(alice).approve(stakingHelper.address, amount);
-    await stakingHelper.connect(alice).stake(amount);
+    await stakingHelper.connect(alice).stake(amount, await alice.getAddress());
+    console.log((await xsato.balanceOf(await alice.getAddress())).toString());
+    for (let i = 0; i < 200; i++) {
+      await ethers.provider.send("evm_mine", []);
+    }
+    await staking.rebase();
+    console.log((await xsato.balanceOf(await alice.getAddress())).toString());
+    for (let i = 0; i < 200; i++) {
+      await ethers.provider.send("evm_mine", []);
+    }
+    await staking.rebase();
+    console.log((await xsato.balanceOf(await alice.getAddress())).toString());
     await staking.connect(alice).claim(await alice.getAddress());
-    expect(await xsato.balanceOf(await alice.getAddress())).to.eq(amount);
+    expect(await xsato.balanceOf(await alice.getAddress())).to.eq(
+      amount.add(ethers.utils.parseUnits("50000", 9).mul(1).div(100))
+    );
   });
 
   it("should succeed without rebase", async () => {
@@ -96,14 +111,17 @@ describe("SatoshiStaking.spec", async () => {
     const amount = ethers.utils.parseUnits("10000", 9);
     await sato.approve(staking.address, amount);
     await staking.stake(amount, await alice.getAddress());
+    console.log((await xsato.balanceOf(warmup.address)).toString());
     for (let i = 0; i < 200; i++) {
       await ethers.provider.send("evm_mine", []);
     }
     await staking.rebase();
+    console.log((await xsato.balanceOf(warmup.address)).toString());
     for (let i = 0; i < 200; i++) {
       await ethers.provider.send("evm_mine", []);
     }
     await staking.rebase();
+    console.log((await xsato.balanceOf(warmup.address)).toString());
     await staking.connect(alice).claim(await alice.getAddress());
     expect(await xsato.balanceOf(await alice.getAddress())).to.eq(
       amount.add(ethers.utils.parseUnits("50000", 9).mul(1).div(100))

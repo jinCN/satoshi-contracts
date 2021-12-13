@@ -50,9 +50,9 @@ contract BondDepository is Ownable, IBond {
 
   // Info for creating new bonds
   struct Terms {
-    uint256 controlVariable; // scaling variable for price
+    uint256 controlVariable; // scaling variable for price, precision 1e10
     uint256 vestingTerm; // in blocks
-    uint256 minimumPrice; // vs principle value
+    uint256 minimumPrice; // vs principle value, precision 1e10
     uint256 maxPayout; // in thousandths of a %. i.e. 500 = 0.5%
     uint256 fee; // as % of bond payout, in hundreths. ( 500 = 5% = 0.05 for every 1 paid)
     uint256 maxDebt; // 9 decimal debt ratio, max % total supply created as debt
@@ -221,7 +221,7 @@ contract BondDepository is Ownable, IBond {
     decayDebt();
     require(totalDebt <= terms.maxDebt, "Max capacity reached");
 
-    uint256 priceInUSD = bondPriceInUSD(); // Stored in bond info
+    uint256 priceInBTC = bondPriceInBTC(); // Stored in bond info
     uint256 nativePrice = _bondPrice();
 
     require(_maxPrice >= nativePrice, "Slippage limit: more than max price"); // slippage protection
@@ -229,18 +229,15 @@ contract BondDepository is Ownable, IBond {
     uint256 value = ITreasury(treasury).valueOf(principle, _amount);
     uint256 payout = payoutFor(value); // payout to bonder is computed
 
-    require(payout >= 10000000, "Bond too small"); // must be > 0.01 SATO ( underflow protection )
+    require(payout >= 1e16, "Bond too small"); // must be > 0.01 SATO ( underflow protection )
     require(payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
     // profits are calculated
     uint256 fee = payout.mul(terms.fee).div(10000);
     uint256 profit = value.sub(payout).sub(fee);
 
-    /**
-            principle is transferred in
-            approved and
-            deposited into the treasury, returning (_amount - profit) SATO
-         */
+    // principle is transferred in approved and deposited into the treasury
+    // returning (_amount - profit) SATO
     IERC20(principle).safeTransferFrom(msg.sender, address(this), _amount);
     IERC20(principle).approve(address(treasury), _amount);
     ITreasury(treasury).deposit(_amount, principle, profit);
@@ -258,12 +255,12 @@ contract BondDepository is Ownable, IBond {
       payout: bondInfo[_depositor].payout.add(payout),
       vesting: terms.vestingTerm,
       lastBlock: block.number,
-      pricePaid: priceInUSD
+      pricePaid: priceInBTC
     });
 
     // indexed events are emitted
-    emit BondCreated(_amount, payout, block.number.add(terms.vestingTerm), priceInUSD);
-    emit BondPriceChanged(bondPriceInUSD(), _bondPrice(), debtRatio());
+    emit BondCreated(_amount, payout, block.number.add(terms.vestingTerm), priceInBTC);
+    emit BondPriceChanged(bondPriceInBTC(), _bondPrice(), debtRatio());
 
     adjust(); // control variable is adjusted
     return payout;
@@ -387,7 +384,7 @@ contract BondDepository is Ownable, IBond {
    *  @return price_ uint
    */
   function bondPrice() public view returns (uint256 price_) {
-    price_ = terms.controlVariable.mul(debtRatio()).add(1000000000).div(1e7);
+    price_ = terms.controlVariable.mul(debtRatio()).div(1e18).add(1000000);
     if (price_ < terms.minimumPrice) {
       price_ = terms.minimumPrice;
     }
@@ -398,7 +395,7 @@ contract BondDepository is Ownable, IBond {
    *  @return price_ uint
    */
   function _bondPrice() internal returns (uint256 price_) {
-    price_ = terms.controlVariable.mul(debtRatio()).add(1000000000).div(1e7);
+    price_ = terms.controlVariable.mul(debtRatio()).div(1e18).add(1000000);
     if (price_ < terms.minimumPrice) {
       price_ = terms.minimumPrice;
     } else if (terms.minimumPrice != 0) {
@@ -407,14 +404,14 @@ contract BondDepository is Ownable, IBond {
   }
 
   /**
-   *  @notice converts bond price to DAI value
+   *  @notice converts bond price to BTC value
    *  @return price_ uint
    */
-  function bondPriceInUSD() public view returns (uint256 price_) {
+  function bondPriceInBTC() public view returns (uint256 price_) {
     if (isLiquidityBond) {
-      price_ = bondPrice().mul(IBondCalculator(bondCalculator).markdown(principle)).div(100);
+      price_ = bondPrice().mul(IBondCalculator(bondCalculator).markdown(principle)).div(1e10);
     } else {
-      price_ = bondPrice().mul(10**IERC20(principle).decimals()).div(100);
+      price_ = bondPrice().mul(10**IERC20(principle).decimals()).div(1e10);
     }
   }
 
@@ -424,7 +421,7 @@ contract BondDepository is Ownable, IBond {
    */
   function debtRatio() public view returns (uint256 debtRatio_) {
     uint256 supply = IERC20(SATO).totalSupply();
-    debtRatio_ = FixedPoint.fraction(currentDebt().mul(1e9), supply).decode112with18().div(1e18);
+    debtRatio_ = FixedPoint.fraction(currentDebt().mul(1e18), supply).decode112with18().div(1e18);
   }
 
   /**
@@ -433,7 +430,7 @@ contract BondDepository is Ownable, IBond {
    */
   function standardizedDebtRatio() external view returns (uint256) {
     if (isLiquidityBond) {
-      return debtRatio().mul(IBondCalculator(bondCalculator).markdown(principle)).div(1e9);
+      return debtRatio().mul(IBondCalculator(bondCalculator).markdown(principle)).div(1e18);
     } else {
       return debtRatio();
     }

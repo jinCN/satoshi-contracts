@@ -5,8 +5,6 @@ import { ethers } from "hardhat";
 import {
   BondDepository,
   BondDepository__factory,
-  DAI,
-  DAI__factory,
   Distributor,
   Distributor__factory,
   RedeemHelper,
@@ -25,22 +23,24 @@ import {
   StakingWarmup__factory,
   WrappedStakedSATO,
   WrappedStakedSATO__factory,
+  WBTC,
+  WBTC__factory,
 } from "../typechain";
 
-const daiBondBCV = "369";
-const minBondPrice = "50000";
+const wbtcBondBCV = ethers.utils.parseUnits("742", 10);
+const minBondPrice = ethers.utils.parseUnits("0.0008", 10);
 const maxBondPayout = "50";
 const bondFee = "10000";
-const maxBondDebt = "1000000000000000";
+const maxBondDebt = ethers.utils.parseEther("1").mul(10000000); // 1000 btc
 const intialBondDebt = "0";
 const initialRewardRate = "3000";
-const initialIndex = "7675210820";
+const initialIndex = ethers.utils.parseEther("1");
 // Bond vesting length in blocks. 33110 ~ 5 days
 const bondVestingLength = "33110";
 
 const config: {
   dao: string;
-  dai: string;
+  wbtc?: string;
   sato?: string;
   xsato?: string;
   wxsato?: string;
@@ -51,48 +51,57 @@ const config: {
   redeemHelper?: string;
   distributor?: string;
   bond: {
-    dai?: string;
+    wbtc?: string;
   };
 } = {
   dao: "0xAA7628D94205C3EE90419Fc3A6b882f4D6A6F3F5",
-  dai: "0x8Ae428C98E1F9d49E85d7676FA41906B209f2BB9",
-  sato: "0x3020E6C9d294DbDd1E80ecAE0A70B7379AC83dD8",
-  xsato: "0x9E8DdB7D293CEfadf283AB25CE6d0D2C47819387",
-  wxsato: "0xba190A3Cc0d2F21F42466A0e21F94A6b5Cd51bbc",
-  treasury: "0x6F3E07aDeae8CFC2Bfcdacd66a69E55D3f99c406",
-  staking: "0xbB7589945DfD5Fc6D0408104b60Ed1b9a36c5129",
-  stakingWarmup: "0x4Ab2F96c29819c4141a85195622424eefE06D2Dc",
-  stakingHelper: "0x3eA8418C6202ed4b2cFaB5fA24394fc147C7B0C4",
-  redeemHelper: "0x365166cc5797AaCc8583a524F7730Ae1182cA41e",
-  distributor: "0xb9002059ce0f906fB51e2fD1202DCaEe72ffaD37",
+  wbtc: "0x5180E4D72A3BB3d2b60c77Ac6fdc0bFfEffCb5CC",
+  sato: "0x9942E04E033bD59A70D4Be61D7Fcb9C5527DAFC8",
+  xsato: "0x5B884F9661151373E555c6BF38Bf1bef8cec5C36",
+  wxsato: "0xC198eCd605dE9A56D006788dFEfAB24842fC14CC",
+  treasury: "0x300C42F5297A769E0802c14395b45423169546d7",
+  staking: "0xebcf429520593CD3Db94381C4d4E561A5b007eB2",
+  stakingWarmup: "0x63D85976a7c2174a902F7a877c0826b5f6b96B93",
+  stakingHelper: "0x6C723B543f34912280b5E2531F32032c5Cc0C5eB",
+  distributor: "0xF99052FcE1cfB5D636D500f7c021743b3f80E103",
+  redeemHelper: "0x9EdADb2FAa8c29137b1D85d061CeBA19fc0a0019",
   bond: {
-    dai: "0xf408d31A31d36B831B3E1a05b961632dA098Ac4c",
+    wbtc: "0x64ed510cf8006738bd5d7C0073404E1966944F4B",
   },
 };
 
 let sato: SATO;
 let xsato: StakedSATO;
 let wxsato: WrappedStakedSATO;
-let dai: DAI;
+let wbtc: WBTC;
 let treasury: SatoshiTreasury;
 let staking: SatoshiStaking;
 let stakingWarmup: StakingWarmup;
 let stakingHelper: StakingHelper;
 let redeemHelper: RedeemHelper;
 let distributor: Distributor;
-let daiBond: BondDepository;
+let wbtcBond: BondDepository;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
   // about 1h in Rinkeby
   const epochLengthInBlocks = 240;
-  const firstEpochBlock = 9736844;
+  const firstEpochBlock = 9806292;
 
-  dai = DAI__factory.connect(config.dai, deployer);
-  if ((await dai.balanceOf(deployer.address)).lt(ethers.utils.parseEther("100000000"))) {
-    console.log("mint 100000000 dai");
-    const tx = await dai.mint(deployer.address, ethers.utils.parseEther("100000000"));
+  if (config.wbtc === undefined) {
+    const WBTC = await ethers.getContractFactory("WBTC", deployer);
+    wbtc = await WBTC.deploy();
+    await wbtc.deployed();
+    config.wbtc = wbtc.address;
+    console.log("Deploy WBTC at:", wbtc.address);
+  } else {
+    wbtc = WBTC__factory.connect(config.wbtc, deployer);
+    console.log("Found WBTC at:", wbtc.address);
+  }
+  if ((await wbtc.balanceOf(deployer.address)).lt(ethers.utils.parseUnits("100000000", 8))) {
+    console.log("mint 100000000 wbtc");
+    const tx = await wbtc.mint(deployer.address, ethers.utils.parseUnits("100000000", 8));
     await tx.wait();
   }
 
@@ -108,11 +117,11 @@ async function main() {
     console.log("Found SATO at:", sato.address);
   }
 
-  if ((await sato.balanceOf(deployer.address)).lt(ethers.utils.parseUnits("10000", 9))) {
+  if ((await sato.balanceOf(deployer.address)).lt(ethers.utils.parseUnits("10000", 18))) {
     console.log("mint 50000 sato");
     let tx = await sato.setVault(deployer.address);
     await tx.wait();
-    tx = await sato.mint(deployer.address, ethers.utils.parseUnits("50000", 9));
+    tx = await sato.mint(deployer.address, ethers.utils.parseUnits("50000", 18));
     await tx.wait();
   }
 
@@ -143,7 +152,7 @@ async function main() {
   // Deploy treasury
   if (config.treasury === undefined) {
     const Treasury = await ethers.getContractFactory("SatoshiTreasury", deployer);
-    treasury = await Treasury.deploy(sato.address, dai.address, dai.address, 0);
+    treasury = await Treasury.deploy(sato.address, wbtc.address, wbtc.address, 0);
     await treasury.deployed();
     config.treasury = treasury.address;
     console.log("Deploy Treasury at:", treasury.address);
@@ -166,7 +175,7 @@ async function main() {
   // Deploy staking warmpup
   if (config.stakingWarmup === undefined) {
     const StakingWarmpup = await ethers.getContractFactory("StakingWarmup", deployer);
-    stakingWarmup = await StakingWarmpup.deploy(staking.address, sato.address);
+    stakingWarmup = await StakingWarmpup.deploy(staking.address, xsato.address);
     await stakingWarmup.deployed();
     config.stakingWarmup = stakingWarmup.address;
     console.log("Deploy StakingWarmpup at:", stakingWarmup.address);
@@ -199,16 +208,16 @@ async function main() {
     console.log("Found Distributor at:", distributor.address);
   }
 
-  // Deploy DAI bond
-  if (config.bond.dai === undefined) {
-    const DAIBond = await ethers.getContractFactory("BondDepository", deployer);
-    daiBond = await DAIBond.deploy(sato.address, dai.address, treasury.address, config.dao, constants.AddressZero);
-    await daiBond.deployed();
-    config.bond.dai = daiBond.address;
-    console.log("Deploy DAIBond at:", daiBond.address);
+  // Deploy WBTC bond
+  if (config.bond.wbtc === undefined) {
+    const WBTCBond = await ethers.getContractFactory("BondDepository", deployer);
+    wbtcBond = await WBTCBond.deploy(sato.address, wbtc.address, treasury.address, config.dao, constants.AddressZero);
+    await wbtcBond.deployed();
+    config.bond.wbtc = wbtcBond.address;
+    console.log("Deploy WBTCBond at:", wbtcBond.address);
   } else {
-    daiBond = BondDepository__factory.connect(config.bond.dai, deployer);
-    console.log("Found DAIBond at:", daiBond.address);
+    wbtcBond = BondDepository__factory.connect(config.bond.wbtc, deployer);
+    console.log("Found WBTCBond at:", wbtcBond.address);
   }
 
   // Deploy RedeemHelper
@@ -223,25 +232,25 @@ async function main() {
   }
 
   /*{
-    console.log("add dai bond to redeem helper");
-    const tx = await redeemHelper.addBondContract(daiBond.address);
+    console.log("add wbtc bond to redeem helper");
+    const tx = await redeemHelper.addBondContract(wbtcBond.address);
     await tx.wait();
   }*/
 
-  // queue and toggle DAI bond reserve depositor
-  if (!(await treasury.isReserveDepositor(daiBond.address))) {
-    console.log("queue and toggle DAI bond reserve depositor");
-    let tx = await treasury.queue("0", daiBond.address);
+  // queue and toggle WBTC bond reserve depositor
+  if (!(await treasury.isReserveDepositor(wbtcBond.address))) {
+    console.log("queue and toggle WBTC bond reserve depositor");
+    let tx = await treasury.queue("0", wbtcBond.address);
     await tx.wait();
-    tx = await treasury.toggle("0", daiBond.address, constants.AddressZero);
+    tx = await treasury.toggle("0", wbtcBond.address, constants.AddressZero);
     await tx.wait();
   }
 
-  // Set DAI and Frax bond terms
-  if ((await daiBond.terms()).controlVariable.eq(constants.Zero)) {
-    console.log("Set DAI bond terms");
-    const tx = await daiBond.initializeBondTerms(
-      daiBondBCV,
+  // Set WBTC and Frax bond terms
+  if ((await wbtcBond.terms()).controlVariable.eq(constants.Zero)) {
+    console.log("Set WBTC bond terms");
+    const tx = await wbtcBond.initializeBondTerms(
+      wbtcBondBCV,
       bondVestingLength,
       minBondPrice,
       maxBondPayout,
@@ -252,10 +261,10 @@ async function main() {
     await tx.wait();
   }
 
-  // Set staking for DAI bond
-  if ((await daiBond.staking()) === constants.AddressZero) {
-    console.log("Set staking for DAI bond");
-    const tx = await daiBond.setStaking(staking.address, false);
+  // Set staking for WBTC bond
+  if ((await wbtcBond.stakingHelper()) === constants.AddressZero) {
+    console.log("Set staking for WBTC bond");
+    const tx = await wbtcBond.setStaking(stakingHelper.address, true);
     await tx.wait();
   }
 
@@ -312,48 +321,58 @@ async function main() {
     await tx.wait();
   }
 
-  // Approve the treasury to spend DAI
-  if ((await dai.allowance(deployer.address, treasury.address)).lt(ethers.utils.parseEther("100000000"))) {
-    console.log("Approve the treasury to spend DAI");
-    const tx = await dai.approve(treasury.address, constants.MaxUint256);
+  // Approve the treasury to spend WBTC
+  if ((await wbtc.allowance(deployer.address, treasury.address)).lt(ethers.utils.parseEther("100000000"))) {
+    console.log("Approve the treasury to spend WBTC");
+    const tx = await wbtc.approve(treasury.address, constants.MaxUint256);
     await tx.wait();
   }
 
-  // Approve dai bonds to spend deployer's DAI
-  if ((await dai.allowance(deployer.address, daiBond.address)).lt(ethers.utils.parseEther("100000000"))) {
-    console.log("Approve dai bonds to spend deployer's DAI");
-    const tx = await dai.approve(daiBond.address, constants.MaxUint256);
+  // Approve wbtc bonds to spend deployer's WBTC
+  if ((await wbtc.allowance(deployer.address, wbtcBond.address)).lt(ethers.utils.parseEther("100000000"))) {
+    console.log("Approve wbtc bonds to spend deployer's WBTC");
+    const tx = await wbtc.approve(wbtcBond.address, constants.MaxUint256);
     await tx.wait();
   }
 
-  if ((await dai.balanceOf(treasury.address)).lt(ethers.utils.parseEther("10000000"))) {
-    console.log("deposit 10000000 dai to treasury");
+  if ((await wbtc.balanceOf(treasury.address)).lt(ethers.utils.parseUnits("100", 8))) {
+    console.log("deposit 100 wbtc to treasury");
     const tx = await treasury.deposit(
-      ethers.utils.parseEther("10000000"),
-      dai.address,
-      ethers.utils.parseUnits("10000000", 9)
+      ethers.utils.parseUnits("100", 8),
+      wbtc.address,
+      ethers.utils.parseUnits("100", 18 + 4)
     );
     await tx.wait();
   }
 
   // Approve the staking/stakingHelper to spend sato
   if ((await sato.allowance(deployer.address, staking.address)).lt(ethers.utils.parseEther("100000000"))) {
-    console.log("Approve the treasury to spend DAI");
+    console.log("Approve the staking to spend sato");
     const tx = await sato.approve(staking.address, constants.MaxUint256);
     await tx.wait();
   }
-
-  if ((await xsato.balanceOf(stakingWarmup.address)).eq(constants.Zero)) {
-    console.log("stake through staking");
-    const tx = await staking.stake(ethers.utils.parseUnits("10", 9), deployer.address);
+  if ((await sato.allowance(deployer.address, stakingHelper.address)).lt(ethers.utils.parseEther("100000000"))) {
+    console.log("Approve the stakingHelper to spend sato");
+    const tx = await sato.approve(stakingHelper.address, constants.MaxUint256);
     await tx.wait();
   }
 
-  if ((await daiBond.bondInfo(deployer.address)).payout.eq(constants.Zero)) {
-    console.log("bond 1000 dai");
-    const tx = await daiBond.deposit(ethers.utils.parseEther("1000"), constants.MaxUint256, deployer.address);
+  if ((await xsato.balanceOf(deployer.address)).eq(constants.Zero)) {
+    console.log("stake through staking helper");
+    const tx = await stakingHelper.stake(ethers.utils.parseUnits("10", 18), await deployer.address);
     await tx.wait();
   }
+
+  if ((await wbtcBond.bondInfo(deployer.address)).payout.eq(constants.Zero)) {
+    console.log("bond 1 wbtc");
+    const tx = await wbtcBond.deposit(ethers.utils.parseUnits("1", 8), constants.MaxUint256, deployer.address);
+    await tx.wait();
+  }
+
+  /*{
+    const tx = await wbtcBond.setAdjustment(false, 1, 233, 1);
+    await tx.wait();
+  }*/
 }
 
 // We recommend this pattern to be able to use async/await everywhere

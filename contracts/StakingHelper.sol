@@ -16,10 +16,10 @@ contract StakingHelper {
     SATO = _SATO;
   }
 
-  function stake(uint256 _amount) external {
+  function stake(uint256 _amount, address _recipient) external {
     IERC20(SATO).transferFrom(msg.sender, address(this), _amount);
     IERC20(SATO).approve(staking, _amount);
-    IStaking(staking).stake(_amount, msg.sender);
-    IStaking(staking).claim(msg.sender);
+    IStaking(staking).stake(_amount, _recipient);
+    IStaking(staking).claim(_recipient);
   }
 }
