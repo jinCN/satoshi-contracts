@@ -1,7 +1,11 @@
+process.env.HARDHAT_NETWORK ||= 'rinkeby';
+process.env.HARDHAT_SHOW_STACK_TRACES ||= 'true';
+process.env.HARDHAT_VERBOSE ||= 'true';
+
 /* eslint-disable camelcase */
 /* eslint-disable node/no-missing-import */
-import { constants } from "ethers";
-import { ethers } from "hardhat";
+import {constants} from 'ethers';
+import {ethers} from 'hardhat';
 import {
   BondDepository,
   BondDepository__factory,
@@ -25,16 +29,21 @@ import {
   WrappedStakedSATO__factory,
   WBTC,
   WBTC__factory,
-} from "../typechain";
+} from '../typechain';
 
-const wbtcBondBCV = ethers.utils.parseUnits("742", 10);
-const minBondPrice = ethers.utils.parseUnits("0.0008", 10);
-const maxBondPayout = "50";
-const bondFee = "10000";
-const maxBondDebt = ethers.utils.parseEther("1").mul(10000000); // 1000 btc
-const intialBondDebt = "0";
-const initialRewardRate = "3000";
-const initialIndex = ethers.utils.parseEther("1");
+let _r: any = undefined;
+let p = {p: Promise.resolve(), t: Promise.resolve(), r: _r};
+p.t = p.p;
+// while (p.t !== p.p) p.r = await (p.t = p.p).catch(e => e);
+
+const wbtcBondBCV = ethers.utils.parseUnits('742', 10);
+const minBondPrice = ethers.utils.parseUnits('0.0008', 10);
+const maxBondPayout = '50';
+const bondFee = '10000';
+const maxBondDebt = ethers.utils.parseEther('1').mul(10000000); // 1000 btc
+const intialBondDebt = '0';
+const initialRewardRate = '3000';
+const initialIndex = ethers.utils.parseEther('1');
 // Bond vesting length in blocks. 33110 ~ 5 days
 const bondVestingLength = "33110";
 
@@ -54,21 +63,53 @@ const config: {
     wbtc?: string;
   };
 } = {
-  dao: "0xAA7628D94205C3EE90419Fc3A6b882f4D6A6F3F5",
-  wbtc: "0x5180E4D72A3BB3d2b60c77Ac6fdc0bFfEffCb5CC",
-  sato: "0x9942E04E033bD59A70D4Be61D7Fcb9C5527DAFC8",
-  xsato: "0x5B884F9661151373E555c6BF38Bf1bef8cec5C36",
-  wxsato: "0xC198eCd605dE9A56D006788dFEfAB24842fC14CC",
-  treasury: "0x300C42F5297A769E0802c14395b45423169546d7",
-  staking: "0xebcf429520593CD3Db94381C4d4E561A5b007eB2",
-  stakingWarmup: "0x63D85976a7c2174a902F7a877c0826b5f6b96B93",
-  stakingHelper: "0x6C723B543f34912280b5E2531F32032c5Cc0C5eB",
-  distributor: "0xF99052FcE1cfB5D636D500f7c021743b3f80E103",
-  redeemHelper: "0x9EdADb2FAa8c29137b1D85d061CeBA19fc0a0019",
+  dao: '0xAA7628D94205C3EE90419Fc3A6b882f4D6A6F3F5',
+  wbtc: '0x5180E4D72A3BB3d2b60c77Ac6fdc0bFfEffCb5CC',
+  sato: '0xF12fe93A7295df963142e43e84C2A680895DCB2f',
+  xsato: '0x3d9ed0591a163f7E30F9cAc44297be0EB60989E9',
+  wxsato: '0x9dB81A931F0A5adeE3053Fe3eD842173e80a3C85',
+  treasury: '0xD6C838F6A6Ea4f67f11A198615175c3DC4CE88b0',
+  staking: '0x5681c2abC756fA35A1D153c20Df81B81C0fb4632',
+  stakingWarmup: '0xf3B6348E9d4254b1eF8B9790aA8F23359fFa4B34',
+  stakingHelper: '0x2eAe64fD1Aa1894d6432e5ca2DB18724257f5dA6',
+  distributor: '0x6D2a19fFB90A75ADeeF70D7FA25Ea6f5A3237368',
+  redeemHelper: '0x12BaAcccF341EBd39E6db4e88A2c92df82E30141',
   bond: {
-    wbtc: "0x64ed510cf8006738bd5d7C0073404E1966944F4B",
+    wbtc: '0x3B2E39D7FCcD958DC606B31d7dD3d29fC91d02e2',
   },
 };
+// {
+//   dao: "0xAA7628D94205C3EE90419Fc3A6b882f4D6A6F3F5",
+//   wbtc: "0x5180E4D72A3BB3d2b60c77Ac6fdc0bFfEffCb5CC",
+//   sato: undefined,
+//   xsato: undefined,
+//   wxsato: undefined,
+//   treasury: undefined,
+//   staking: undefined,
+//   stakingWarmup: undefined,
+//   stakingHelper: undefined,
+//   distributor: undefined,
+//   redeemHelper: undefined,
+//   bond: {
+//     wbtc: undefined,
+//   },
+// };
+//   {
+//   dao: "0xAA7628D94205C3EE90419Fc3A6b882f4D6A6F3F5",
+//   wbtc: "0x5180E4D72A3BB3d2b60c77Ac6fdc0bFfEffCb5CC",
+//   sato: "0x9942E04E033bD59A70D4Be61D7Fcb9C5527DAFC8",
+//   xsato: "0x5B884F9661151373E555c6BF38Bf1bef8cec5C36",
+//   wxsato: "0xC198eCd605dE9A56D006788dFEfAB24842fC14CC",
+//   treasury: "0x300C42F5297A769E0802c14395b45423169546d7",
+//   staking: "0xebcf429520593CD3Db94381C4d4E561A5b007eB2",
+//   stakingWarmup: "0x63D85976a7c2174a902F7a877c0826b5f6b96B93",
+//   stakingHelper: "0x6C723B543f34912280b5E2531F32032c5Cc0C5eB",
+//   distributor: "0xF99052FcE1cfB5D636D500f7c021743b3f80E103",
+//   redeemHelper: "0x9EdADb2FAa8c29137b1D85d061CeBA19fc0a0019",
+//   bond: {
+//     wbtc: "0x64ed510cf8006738bd5d7C0073404E1966944F4B",
+//   },
+// };
 
 let sato: SATO;
 let xsato: StakedSATO;
@@ -84,11 +125,11 @@ let wbtcBond: BondDepository;
 
 async function main() {
   const [deployer] = await ethers.getSigners();
-
+  
   // about 1h in Rinkeby
   const epochLengthInBlocks = 240;
   const firstEpochBlock = 9806292;
-
+  
   if (config.wbtc === undefined) {
     const WBTC = await ethers.getContractFactory("WBTC", deployer);
     wbtc = await WBTC.deploy();
@@ -99,44 +140,39 @@ async function main() {
     wbtc = WBTC__factory.connect(config.wbtc, deployer);
     console.log("Found WBTC at:", wbtc.address);
   }
-  if ((await wbtc.balanceOf(deployer.address)).lt(ethers.utils.parseUnits("100000000", 8))) {
-    console.log("mint 100000000 wbtc");
-    const tx = await wbtc.mint(deployer.address, ethers.utils.parseUnits("100000000", 8));
-    await tx.wait();
-  }
-
+  
   // Deploy SATO
   if (config.sato === undefined) {
-    const SATO = await ethers.getContractFactory("SATO", deployer);
+    const SATO = await ethers.getContractFactory('SATO', deployer);
     sato = await SATO.deploy();
     await sato.deployed();
     config.sato = sato.address;
-    console.log("Deploy SATO at:", sato.address);
+    console.log('Deploy SATO at:', sato.address);
   } else {
     sato = SATO__factory.connect(config.sato, deployer);
-    console.log("Found SATO at:", sato.address);
+    console.log('Found SATO at:', sato.address);
   }
-
-  if ((await sato.balanceOf(deployer.address)).lt(ethers.utils.parseUnits("10000", 18))) {
-    console.log("mint 50000 sato");
-    let tx = await sato.setVault(deployer.address);
-    await tx.wait();
-    tx = await sato.mint(deployer.address, ethers.utils.parseUnits("50000", 18));
-    await tx.wait();
-  }
-
+  
+  // if ((await sato.balanceOf(deployer.address)).lt(ethers.utils.parseUnits("10000", 18))) {
+  //   console.log("mint 50000 sato");
+  //   let tx = await sato.setVault(deployer.address);
+  //   await tx.wait();
+  //   tx = await sato.mint(deployer.address, ethers.utils.parseUnits("50000", 18));
+  //   await tx.wait();
+  // }
+  
   // Deploy StakedSATO
   if (config.xsato === undefined) {
-    const StakedSATO = await ethers.getContractFactory("StakedSATO", deployer);
+    const StakedSATO = await ethers.getContractFactory('StakedSATO', deployer);
     xsato = await StakedSATO.deploy();
     await xsato.deployed();
     config.xsato = xsato.address;
-    console.log("Deploy StakedSATO at:", xsato.address);
+    console.log('Deploy StakedSATO at:', xsato.address);
   } else {
     xsato = StakedSATO__factory.connect(config.xsato, deployer);
     console.log("Found StakedSATO at:", xsato.address);
   }
-
+  
   // Deploy WrappedStakedSATO
   if (config.wxsato === undefined) {
     const WrappedStakedSATO = await ethers.getContractFactory("WrappedStakedSATO", deployer);
@@ -148,7 +184,7 @@ async function main() {
     wxsato = WrappedStakedSATO__factory.connect(config.wxsato, deployer);
     console.log("Found WrappedStakedSATO at:", wxsato.address);
   }
-
+  
   // Deploy treasury
   if (config.treasury === undefined) {
     const Treasury = await ethers.getContractFactory("SatoshiTreasury", deployer);
@@ -160,7 +196,7 @@ async function main() {
     treasury = SatoshiTreasury__factory.connect(config.treasury, deployer);
     console.log("Found Treasury at:", treasury.address);
   }
-
+  
   // Deploy Staking
   if (config.staking === undefined) {
     const SatoshiStaking = await ethers.getContractFactory("SatoshiStaking", deployer);
@@ -171,7 +207,7 @@ async function main() {
     staking = SatoshiStaking__factory.connect(config.staking, deployer);
     console.log("Found SatoshiStaking at:", staking.address);
   }
-
+  
   // Deploy staking warmpup
   if (config.stakingWarmup === undefined) {
     const StakingWarmpup = await ethers.getContractFactory("StakingWarmup", deployer);
@@ -183,7 +219,7 @@ async function main() {
     stakingWarmup = StakingWarmup__factory.connect(config.stakingWarmup, deployer);
     console.log("Found StakingWarmpup at:", stakingWarmup.address);
   }
-
+  
   // Deploy staking helper
   if (config.stakingHelper === undefined) {
     const StakingHelper = await ethers.getContractFactory("StakingHelper", deployer);
@@ -195,7 +231,7 @@ async function main() {
     stakingHelper = StakingHelper__factory.connect(config.stakingHelper, deployer);
     console.log("Found StakingHelper at:", stakingHelper.address);
   }
-
+  
   // Deploy staking distributor
   if (config.distributor === undefined) {
     const Distributor = await ethers.getContractFactory("Distributor", deployer);
@@ -207,7 +243,7 @@ async function main() {
     distributor = Distributor__factory.connect(config.distributor, deployer);
     console.log("Found Distributor at:", distributor.address);
   }
-
+  
   // Deploy WBTC bond
   if (config.bond.wbtc === undefined) {
     const WBTCBond = await ethers.getContractFactory("BondDepository", deployer);
@@ -219,24 +255,25 @@ async function main() {
     wbtcBond = BondDepository__factory.connect(config.bond.wbtc, deployer);
     console.log("Found WBTCBond at:", wbtcBond.address);
   }
-
+  
   // Deploy RedeemHelper
   if (config.redeemHelper === undefined) {
     const RedeemHelper = await ethers.getContractFactory("RedeemHelper", deployer);
     redeemHelper = await RedeemHelper.deploy();
     await redeemHelper.deployed();
     console.log("Deploy RedeemHelper at:", redeemHelper.address);
+    {
+      console.log("add wbtc bond to redeem helper");
+      const tx = await redeemHelper.addBondContract(wbtcBond.address);
+      await tx.wait();
+    }
   } else {
     redeemHelper = RedeemHelper__factory.connect(config.redeemHelper, deployer);
     console.log("Found RedeemHelper at:", redeemHelper.address);
   }
-
-  /*{
-    console.log("add wbtc bond to redeem helper");
-    const tx = await redeemHelper.addBondContract(wbtcBond.address);
-    await tx.wait();
-  }*/
-
+  
+ 
+  
   // queue and toggle WBTC bond reserve depositor
   if (!(await treasury.isReserveDepositor(wbtcBond.address))) {
     console.log("queue and toggle WBTC bond reserve depositor");
@@ -245,7 +282,7 @@ async function main() {
     tx = await treasury.toggle("0", wbtcBond.address, constants.AddressZero);
     await tx.wait();
   }
-
+  
   // Set WBTC and Frax bond terms
   if ((await wbtcBond.terms()).controlVariable.eq(constants.Zero)) {
     console.log("Set WBTC bond terms");
@@ -260,14 +297,14 @@ async function main() {
     );
     await tx.wait();
   }
-
+  
   // Set staking for WBTC bond
   if ((await wbtcBond.stakingHelper()) === constants.AddressZero) {
     console.log("Set staking for WBTC bond");
     const tx = await wbtcBond.setStaking(stakingHelper.address, true);
     await tx.wait();
   }
-
+  
   // Initialize xSATO and set the index
   if ((await xsato.stakingContract()) === constants.AddressZero) {
     console.log("Initialize xSATO and set the index");
@@ -276,33 +313,35 @@ async function main() {
     tx = await xsato.setIndex(initialIndex);
     await tx.wait();
   }
-
+  
+  let needAddRecipient = false;
   // set distributor contract and warmup contract
   if ((await staking.distributor()) !== distributor.address) {
     console.log("set distributor contract");
     const tx = await staking.setContract(0, distributor.address);
     await tx.wait();
+    needAddRecipient = true;
   }
   if ((await staking.warmupContract()) === constants.AddressZero) {
     console.log("set stakingWarmup contract");
     const tx = await staking.setContract(1, stakingWarmup.address);
     await tx.wait();
   }
-
+  
   // Set treasury for SATO token
   if ((await sato.vault()) !== treasury.address) {
     console.log("Set treasury for SATO token");
     const tx = await sato.setVault(treasury.address);
     await tx.wait();
   }
-
+  
   // Add staking contract as distributor recipient
-  /*{
-    console.log("Add staking contract as distributor recipient");
+  if (needAddRecipient) {
+    console.log('Add staking contract as distributor recipient');
     const tx = await distributor.addRecipient(staking.address, initialRewardRate);
     await tx.wait();
-  }*/
-
+  }
+  
   // queue and toggle reward manager
   if (!(await treasury.isRewardManager(distributor.address))) {
     console.log("queue and toggle reward manager");
@@ -311,7 +350,7 @@ async function main() {
     tx = await treasury.toggle("8", distributor.address, constants.AddressZero);
     await tx.wait();
   }
-
+  
   // queue and toggle deployer reserve depositor
   if (!(await treasury.isReserveDepositor(deployer.address))) {
     console.log("queue and toggle deployer reserve depositor");
@@ -320,21 +359,21 @@ async function main() {
     tx = await treasury.toggle("0", deployer.address, constants.AddressZero);
     await tx.wait();
   }
-
+  
   // Approve the treasury to spend WBTC
   if ((await wbtc.allowance(deployer.address, treasury.address)).lt(ethers.utils.parseEther("100000000"))) {
     console.log("Approve the treasury to spend WBTC");
     const tx = await wbtc.approve(treasury.address, constants.MaxUint256);
     await tx.wait();
   }
-
+  
   // Approve wbtc bonds to spend deployer's WBTC
   if ((await wbtc.allowance(deployer.address, wbtcBond.address)).lt(ethers.utils.parseEther("100000000"))) {
     console.log("Approve wbtc bonds to spend deployer's WBTC");
     const tx = await wbtc.approve(wbtcBond.address, constants.MaxUint256);
     await tx.wait();
   }
-
+  
   if ((await wbtc.balanceOf(treasury.address)).lt(ethers.utils.parseUnits("100", 8))) {
     console.log("deposit 100 wbtc to treasury");
     const tx = await treasury.deposit(
@@ -344,7 +383,7 @@ async function main() {
     );
     await tx.wait();
   }
-
+  
   // Approve the staking/stakingHelper to spend sato
   if ((await sato.allowance(deployer.address, staking.address)).lt(ethers.utils.parseEther("100000000"))) {
     console.log("Approve the staking to spend sato");
@@ -356,23 +395,25 @@ async function main() {
     const tx = await sato.approve(stakingHelper.address, constants.MaxUint256);
     await tx.wait();
   }
-
+  
   if ((await xsato.balanceOf(deployer.address)).eq(constants.Zero)) {
     console.log("stake through staking helper");
     const tx = await stakingHelper.stake(ethers.utils.parseUnits("10", 18), await deployer.address);
     await tx.wait();
   }
-
+  
   if ((await wbtcBond.bondInfo(deployer.address)).payout.eq(constants.Zero)) {
-    console.log("bond 1 wbtc");
-    const tx = await wbtcBond.deposit(ethers.utils.parseUnits("1", 8), constants.MaxUint256, deployer.address);
+    console.log('bond 1 wbtc');
+    const tx = await wbtcBond.deposit(ethers.utils.parseUnits('1', 8), constants.MaxUint256, deployer.address);
     await tx.wait();
   }
-
+  
   /*{
     const tx = await wbtcBond.setAdjustment(false, 1, 233, 1);
     await tx.wait();
   }*/
+  
+  while (p.t !== p.p) p.r = await (p.t = p.p).catch(e => e);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
